@@ -1,0 +1,1777 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌸 Döngüm — Regl Takvimi</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --rose: #e8637a;
+        --rose-light: #f4a0b0;
+        --rose-pale: #fdf0f2;
+        --rose-deep: #c94060;
+        --blush: #fce8ec;
+        --cream: #fdf8f5;
+        --mauve: #9b6b7a;
+        --text: #2d1a20;
+        --text-soft: #8a6070;
+        --white: #ffffff;
+        --shadow: 0 4px 24px rgba(200, 80, 100, 0.1);
+        --shadow-hover: 0 8px 32px rgba(200, 80, 100, 0.18);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--cream);
+        color: var(--text);
+        min-height: 100vh;
+        background-image:
+          radial-gradient(
+            ellipse at 10% 20%,
+            rgba(232, 99, 122, 0.08) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse at 90% 80%,
+            rgba(252, 232, 236, 0.6) 0%,
+            transparent 50%
+          );
+      }
+
+      header {
+        text-align: center;
+        padding: 2.5rem 1rem 1rem;
+      }
+
+      header h1 {
+        font-family: "Playfair Display", serif;
+        font-size: clamp(2rem, 5vw, 3rem);
+        color: var(--rose-deep);
+        letter-spacing: -0.02em;
+      }
+
+      header h1 span {
+        color: var(--rose-light);
+        font-style: italic;
+      }
+
+      header p {
+        color: var(--text-soft);
+        font-size: 0.9rem;
+        margin-top: 0.4rem;
+        font-weight: 300;
+      }
+
+      .privacy-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(232, 99, 122, 0.1);
+        border: 1px solid rgba(232, 99, 122, 0.2);
+        color: var(--rose-deep);
+        font-size: 0.75rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 50px;
+        margin-top: 0.8rem;
+        font-weight: 500;
+      }
+
+      .main-grid {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 4rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+      }
+
+      @media (max-width: 680px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 1.8rem;
+        box-shadow: var(--shadow);
+        transition: box-shadow 0.3s;
+      }
+
+      .card:hover {
+        box-shadow: var(--shadow-hover);
+      }
+
+      .card-title {
+        font-family: "Playfair Display", serif;
+        font-size: 1.15rem;
+        color: var(--rose-deep);
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      /* Takvim */
+      .calendar-wrap {
+        grid-column: 1 / -1;
+      }
+
+      .cal-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+
+      .cal-nav button {
+        background: var(--rose-pale);
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: var(--rose-deep);
+        transition: background 0.2s;
+      }
+
+      .cal-nav button:hover {
+        background: var(--blush);
+      }
+
+      .cal-month-label {
+        font-family: "Playfair Display", serif;
+        font-size: 1.2rem;
+        color: var(--text);
+      }
+
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+      }
+
+      .cal-day-name {
+        text-align: center;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--text-soft);
+        padding: 4px 0 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .cal-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        position: relative;
+        user-select: none;
+        font-weight: 400;
+      }
+
+      .cal-day:hover:not(.empty):not(.other-month) {
+        background: var(--blush);
+        transform: scale(1.12);
+      }
+
+      .cal-day.empty {
+        cursor: default;
+      }
+      .cal-day.other-month {
+        color: #ddd;
+        cursor: default;
+      }
+
+      .cal-day.today {
+        border: 2px solid var(--rose);
+        font-weight: 600;
+        color: var(--rose-deep);
+      }
+
+      .cal-day.period {
+        background: var(--rose);
+        color: white;
+        font-weight: 600;
+      }
+
+      .cal-day.period:hover {
+        background: var(--rose-deep);
+        transform: scale(1.12);
+      }
+
+      .cal-day.predicted {
+        background: rgba(232, 99, 122, 0.15);
+        color: var(--rose-deep);
+      }
+
+      .cal-day.ovulation {
+        background: rgba(255, 180, 100, 0.25);
+        color: #b07020;
+      }
+
+      .cal-day.fertile {
+        background: rgba(100, 200, 150, 0.15);
+        color: #2a7a50;
+      }
+
+      /* Legend */
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        margin-top: 1rem;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.78rem;
+        color: var(--text-soft);
+      }
+
+      .legend-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+      }
+
+      /* Form */
+      label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-soft);
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      input[type="date"],
+      input[type="number"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 0.65rem 0.9rem;
+        border: 1.5px solid rgba(232, 99, 122, 0.2);
+        border-radius: 10px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.9rem;
+        color: var(--text);
+        background: var(--rose-pale);
+        outline: none;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--rose);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 70px;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(200, 64, 96, 0.25);
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(200, 64, 96, 0.35);
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn-danger {
+        background: transparent;
+        color: var(--rose);
+        border: 1.5px solid rgba(232, 99, 122, 0.3);
+        box-shadow: none;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        padding: 0.5rem;
+      }
+
+      .btn-danger:hover {
+        background: var(--blush);
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* Stats */
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid rgba(232, 99, 122, 0.08);
+      }
+
+      .stat-row:last-child {
+        border-bottom: none;
+      }
+
+      .stat-label {
+        font-size: 0.83rem;
+        color: var(--text-soft);
+      }
+
+      .stat-value {
+        font-family: "Playfair Display", serif;
+        font-size: 1.1rem;
+        color: var(--rose-deep);
+        font-weight: 600;
+      }
+
+      /* History */
+      .history-list {
+        list-style: none;
+      }
+
+      .history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.6rem 0.8rem;
+        border-radius: 10px;
+        margin-bottom: 0.4rem;
+        background: var(--rose-pale);
+        font-size: 0.85rem;
+      }
+
+      .history-item .date-range {
+        font-weight: 500;
+        color: var(--rose-deep);
+      }
+      .history-item .duration {
+        color: var(--text-soft);
+        font-size: 0.78rem;
+      }
+
+      .del-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        opacity: 0.4;
+        transition: opacity 0.2s;
+        padding: 2px 4px;
+      }
+
+      .del-btn:hover {
+        opacity: 1;
+      }
+
+      /* Next period info */
+      .next-info {
+        background: linear-gradient(135deg, var(--blush), var(--rose-pale));
+        border-radius: 16px;
+        padding: 1.2rem;
+        text-align: center;
+        border: 1px solid rgba(232, 99, 122, 0.15);
+      }
+
+      .next-info .days-left {
+        font-family: "Playfair Display", serif;
+        font-size: 2.8rem;
+        color: var(--rose-deep);
+        line-height: 1;
+      }
+
+      .next-info .days-label {
+        font-size: 0.8rem;
+        color: var(--text-soft);
+        margin-top: 0.3rem;
+      }
+      .next-info .next-date {
+        font-size: 0.85rem;
+        color: var(--mauve);
+        margin-top: 0.5rem;
+        font-weight: 500;
+      }
+
+      /* Symptoms */
+      .symptom-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .tag {
+        background: var(--rose-pale);
+        border: 1.5px solid transparent;
+        border-radius: 20px;
+        padding: 0.3rem 0.75rem;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        color: var(--text-soft);
+        user-select: none;
+      }
+
+      .tag.active {
+        background: var(--blush);
+        border-color: var(--rose);
+        color: var(--rose-deep);
+        font-weight: 500;
+      }
+
+      .flow-options {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+      }
+
+      .flow-btn {
+        padding: 0.5rem 0.3rem;
+        border-radius: 10px;
+        border: 1.5px solid rgba(232, 99, 122, 0.2);
+        background: var(--rose-pale);
+        cursor: pointer;
+        font-size: 0.78rem;
+        color: var(--text-soft);
+        transition: all 0.15s;
+        text-align: center;
+      }
+
+      .flow-btn.active {
+        background: var(--rose);
+        color: white;
+        border-color: var(--rose);
+        font-weight: 500;
+      }
+
+      /* Mood */
+      .mood-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        justify-content: space-between;
+      }
+
+      .mood-btn {
+        flex: 1;
+        font-size: 1.4rem;
+        border: 1.5px solid rgba(232, 99, 122, 0.15);
+        background: var(--rose-pale);
+        border-radius: 10px;
+        padding: 0.5rem 0;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .mood-btn.active {
+        background: var(--blush);
+        border-color: var(--rose);
+        transform: scale(1.1);
+      }
+
+      .section-full {
+        grid-column: 1 / -1;
+      }
+
+      .empty-state {
+        text-align: center;
+        color: var(--text-soft);
+        font-size: 0.85rem;
+        padding: 1.5rem 0;
+        font-style: italic;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: var(--rose-deep);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 999;
+        pointer-events: none;
+      }
+
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* ─── Tab Navigation ─── */
+      .tab-nav {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem 0;
+        max-width: 960px;
+        margin: 0 auto;
+      }
+
+      .tab-btn {
+        padding: 0.55rem 1.4rem;
+        border-radius: 50px;
+        border: 1.5px solid rgba(232, 99, 122, 0.25);
+        background: transparent;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.85rem;
+        color: var(--text-soft);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+      }
+
+      .tab-btn.active {
+        background: var(--rose);
+        color: white;
+        border-color: var(--rose);
+        box-shadow: 0 3px 12px rgba(200, 64, 96, 0.25);
+      }
+
+      .tab-btn:hover:not(.active) {
+        background: var(--blush);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: contents;
+      }
+
+      /* ─── Charts ─── */
+      .chart-card {
+        grid-column: 1 / -1;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 220px;
+      }
+
+      .chart-subtitle {
+        font-size: 0.78rem;
+        color: var(--text-soft);
+        margin-top: -0.6rem;
+        margin-bottom: 1rem;
+        font-weight: 300;
+      }
+
+      .insight-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+
+      .insight-chip {
+        background: var(--rose-pale);
+        border-radius: 20px;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.78rem;
+        color: var(--rose-deep);
+        font-weight: 500;
+        border: 1px solid rgba(232, 99, 122, 0.15);
+      }
+
+      .insight-chip.green {
+        background: rgba(100, 200, 150, 0.12);
+        color: #2a7a50;
+        border-color: rgba(100, 200, 150, 0.2);
+      }
+      .insight-chip.orange {
+        background: rgba(255, 160, 80, 0.12);
+        color: #a06020;
+        border-color: rgba(255, 160, 80, 0.2);
+      }
+
+      .no-data-chart {
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-soft);
+        font-size: 0.85rem;
+        gap: 0.5rem;
+      }
+
+      .no-data-chart span {
+        font-size: 2rem;
+      }
+
+      .cycle-phase-banner {
+        background: linear-gradient(90deg, var(--rose-pale), var(--blush));
+        border-left: 4px solid var(--rose);
+        border-radius: 0 12px 12px 0;
+        padding: 0.8rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.83rem;
+      }
+
+      .cycle-phase-banner strong {
+        color: var(--rose-deep);
+        display: block;
+        font-size: 0.95rem;
+        margin-bottom: 0.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🌸 Regl <span>Takvimi</span></h1>
+      <p>Regl takibi, döngü analizi ve sağlık notları</p>
+      <div class="privacy-badge">❤️🥰</div>
+      <button
+        onclick="resetAllData()"
+        style="
+          margin-top: 1rem;
+          background: transparent;
+          border: 1.5px solid rgba(232, 99, 122, 0.3);
+          color: var(--text-soft);
+          font-family: &quot;DM Sans&quot;, sans-serif;
+          font-size: 0.75rem;
+          padding: 0.35rem 1rem;
+          border-radius: 50px;
+          cursor: pointer;
+          transition: all 0.2s;
+        "
+        onmouseover="
+          this.style.background = '#fce8ec';
+          this.style.color = '#c94060';
+        "
+        onmouseout="
+          this.style.background = 'transparent';
+          this.style.color = 'var(--text-soft)';
+        "
+      >
+        Tüm Verileri Sıfırla
+      </button>
+    </header>
+
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('takvim', this)">
+        📅 Takvim
+      </button>
+      <button class="tab-btn" onclick="switchTab('analiz', this)">
+        📊 Analiz
+      </button>
+      <button class="tab-btn" onclick="switchTab('kayit', this)">
+        ➕ Kayıt
+      </button>
+    </div>
+
+    <div class="main-grid">
+      <!-- TAKVİM -->
+      <div class="tab-panel active" id="tab-takvim" style="display: contents">
+        <div class="card calendar-wrap">
+          <div class="card-title">📅 Takvim</div>
+          <div class="cal-nav">
+            <button onclick="changeMonth(-1)">‹</button>
+            <div class="cal-month-label" id="calLabel"></div>
+            <button onclick="changeMonth(1)">›</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background: var(--rose)"></div>
+              Regl günleri
+            </div>
+            <div class="legend-item">
+              <div
+                class="legend-dot"
+                style="background: rgba(232, 99, 122, 0.2)"
+              ></div>
+              Tahmini regl
+            </div>
+            <div class="legend-item">
+              <div
+                class="legend-dot"
+                style="background: rgba(255, 180, 100, 0.35)"
+              ></div>
+              Yumurtlama
+            </div>
+            <div class="legend-item">
+              <div
+                class="legend-dot"
+                style="background: rgba(100, 200, 150, 0.25)"
+              ></div>
+              Verimli dönem
+            </div>
+          </div>
+        </div>
+
+        <!-- BUGÜNKÜ FAZINIZ -->
+        <div class="card" id="phaseCard">
+          <div class="card-title">🌙 Bugün</div>
+          <div id="phaseInfo"></div>
+        </div>
+
+        <!-- SONRAKİ REGl -->
+        <div class="card">
+          <div class="card-title">⏳ Sonraki Regl</div>
+          <div id="nextPeriodInfo"></div>
+        </div>
+
+        <!-- GEÇMİŞ -->
+        <div class="card section-full">
+          <div class="card-title">📋 Geçmiş Kayıtlar</div>
+          <ul class="history-list" id="historyList"></ul>
+        </div>
+      </div>
+      <!-- /tab-takvim -->
+
+      <!-- ═══════════════ ANALİZ PANEL ═══════════════ -->
+      <div class="tab-panel" id="tab-analiz">
+        <!-- Döngü Trendi -->
+        <div class="card chart-card">
+          <div class="card-title">📈 Döngü Uzunluğu Trendi</div>
+          <p class="chart-subtitle">
+            Her döngünün kaç gün sürdüğü — düzenliliğini takip et
+          </p>
+          <div class="chart-container"><canvas id="cycleChart"></canvas></div>
+          <div class="insight-chips" id="cycleInsights"></div>
+        </div>
+
+        <!-- Regl Süresi -->
+        <div class="card chart-card-half">
+          <div class="card-title">🩸 Regl Süresi</div>
+          <p class="chart-subtitle">Her kayıtta kaç gün sürdü</p>
+          <div class="chart-container" style="height: 190px">
+            <canvas id="durationChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Belirtiler -->
+        <div class="card chart-card-half">
+          <div class="card-title">🤕 Belirti Dağılımı</div>
+          <p class="chart-subtitle">En sık yaşadığın belirtiler</p>
+          <div class="chart-container" style="height: 190px">
+            <canvas id="symptomChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Akış & Ruh Hali -->
+        <div class="card chart-card-half">
+          <div class="card-title">💧 Akış Yoğunluğu</div>
+          <p class="chart-subtitle">Dönemlere göre akış dağılımı</p>
+          <div class="chart-container" style="height: 190px">
+            <canvas id="flowChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card chart-card-half">
+          <div class="card-title">😊 Ruh Hali Dağılımı</div>
+          <p class="chart-subtitle">Regl dönemlerindeki duygu durumun</p>
+          <div class="chart-container" style="height: 190px">
+            <canvas id="moodChart"></canvas>
+          </div>
+        </div>
+
+        <!-- İstatistikler -->
+        <div class="card chart-card">
+          <div class="card-title">📊 Özet İstatistikler</div>
+          <div id="statsContent"></div>
+        </div>
+      </div>
+      <!-- /tab-analiz -->
+
+      <!-- ═══════════════ KAYIT PANEL ═══════════════ -->
+      <div class="tab-panel" id="tab-kayit">
+        <!-- REGL KAYDI -->
+        <div class="card section-full">
+          <div class="card-title">➕ Regl Günü Ekle</div>
+          <label>Başlangıç Tarihi</label>
+          <input type="date" id="startDate" />
+          <label>Bitiş Tarihi</label>
+          <input type="date" id="endDate" />
+          <label>Akış Yoğunluğu</label>
+          <div class="flow-options">
+            <div class="flow-btn" data-flow="hafif" onclick="selectFlow(this)">
+              💧 Hafif
+            </div>
+            <div class="flow-btn" data-flow="orta" onclick="selectFlow(this)">
+              💧💧 Orta
+            </div>
+            <div class="flow-btn" data-flow="yoğun" onclick="selectFlow(this)">
+              💧💧💧 Yoğun
+            </div>
+            <div
+              class="flow-btn"
+              data-flow="çok yoğun"
+              onclick="selectFlow(this)"
+            >
+              🌊 Çok Yoğun
+            </div>
+          </div>
+          <label>Ruh Hali</label>
+          <div class="mood-row">
+            <button class="mood-btn" data-mood="😊" onclick="selectMood(this)">
+              😊
+            </button>
+            <button class="mood-btn" data-mood="😐" onclick="selectMood(this)">
+              😐
+            </button>
+            <button class="mood-btn" data-mood="😢" onclick="selectMood(this)">
+              😢
+            </button>
+            <button class="mood-btn" data-mood="😡" onclick="selectMood(this)">
+              😡
+            </button>
+            <button class="mood-btn" data-mood="😴" onclick="selectMood(this)">
+              😴
+            </button>
+          </div>
+          <label>Belirtiler</label>
+          <div class="symptom-tags" id="symptomTags">
+            <span class="tag" onclick="toggleSymptom(this)"
+              >🤕 Karın ağrısı</span
+            >
+            <span class="tag" onclick="toggleSymptom(this)">🤯 Baş ağrısı</span>
+            <span class="tag" onclick="toggleSymptom(this)"
+              >🤢 Mide bulantısı</span
+            >
+            <span class="tag" onclick="toggleSymptom(this)">😩 Yorgunluk</span>
+            <span class="tag" onclick="toggleSymptom(this)">🔥 Şişkinlik</span>
+            <span class="tag" onclick="toggleSymptom(this)">💢 Gerginlik</span>
+            <span class="tag" onclick="toggleSymptom(this)"
+              >🦵 Bacak ağrısı</span
+            >
+            <span class="tag" onclick="toggleSymptom(this)"
+              >💤 Uyku bozukluğu</span
+            >
+            <span class="tag" onclick="toggleSymptom(this)"
+              >🍫 Yeme isteği</span
+            >
+          </div>
+          <label>Notlar</label>
+          <textarea
+            id="notes"
+            placeholder="İstersen not ekleyebilirsin..."
+          ></textarea>
+          <button class="btn" onclick="savePeriod()">Kaydet</button>
+        </div>
+      </div>
+      <!-- /tab-kayit -->
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      // ============================================================
+      // VERİ YÖNETİMİ — yalnızca localStorage (sadece bu cihaz)
+      // ============================================================
+      const STORAGE_KEY = "dongu_verileri_v2";
+
+      function loadData() {
+        try {
+          return (
+            JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+              periods: [],
+              settings: { cycleLength: 28, periodLength: 5 },
+            }
+          );
+        } catch {
+          return {
+            periods: [],
+            settings: { cycleLength: 28, periodLength: 5 },
+          };
+        }
+      }
+
+      function saveData(data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+
+      // ============================================================
+      // TAKVİM
+      // ============================================================
+      let currentYear = new Date().getFullYear();
+      let currentMonth = new Date().getMonth();
+
+      const TR_MONTHS = [
+        "Ocak",
+        "Şubat",
+        "Mart",
+        "Nisan",
+        "Mayıs",
+        "Haziran",
+        "Temmuz",
+        "Ağustos",
+        "Eylül",
+        "Ekim",
+        "Kasım",
+        "Aralık",
+      ];
+      const TR_DAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+
+      function changeMonth(delta) {
+        currentMonth += delta;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+        if (currentMonth < 0) {
+          currentMonth = 11;
+          currentYear--;
+        }
+        renderCalendar();
+      }
+
+      function dateStr(y, m, d) {
+        return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+
+      function getPeriodDates(data) {
+        const set = new Set();
+        data.periods.forEach((p) => {
+          const s = new Date(p.start);
+          const e = new Date(p.end);
+          for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+            set.add(d.toISOString().slice(0, 10));
+          }
+        });
+        return set;
+      }
+
+      function getPredictions(data) {
+        const predicted = new Set(),
+          ovulation = new Set(),
+          fertile = new Set();
+        if (data.periods.length < 1) return { predicted, ovulation, fertile };
+
+        const cl = data.settings.cycleLength || 28;
+        const pl = data.settings.periodLength || 5;
+        const sorted = [...data.periods].sort(
+          (a, b) => new Date(b.start) - new Date(a.start),
+        );
+        const lastStart = new Date(sorted[0].start);
+
+        for (let cycle = 1; cycle <= 3; cycle++) {
+          const nextStart = new Date(lastStart);
+          nextStart.setDate(nextStart.getDate() + cl * cycle);
+          for (let i = 0; i < pl; i++) {
+            const d = new Date(nextStart);
+            d.setDate(d.getDate() + i);
+            predicted.add(d.toISOString().slice(0, 10));
+          }
+          const ovDay = new Date(nextStart);
+          ovDay.setDate(ovDay.getDate() - 14);
+          ovulation.add(ovDay.toISOString().slice(0, 10));
+          for (let i = -4; i <= 1; i++) {
+            const fd = new Date(ovDay);
+            fd.setDate(fd.getDate() + i);
+            if (!ovulation.has(fd.toISOString().slice(0, 10)))
+              fertile.add(fd.toISOString().slice(0, 10));
+          }
+        }
+        return { predicted, ovulation, fertile };
+      }
+
+      function renderCalendar() {
+        const data = loadData();
+        const periodDates = getPeriodDates(data);
+        const { predicted, ovulation, fertile } = getPredictions(data);
+        const today = new Date().toISOString().slice(0, 10);
+
+        document.getElementById("calLabel").textContent =
+          `${TR_MONTHS[currentMonth]} ${currentYear}`;
+        const grid = document.getElementById("calGrid");
+        grid.innerHTML = "";
+
+        // Day names (Mon-Sun)
+        TR_DAYS.forEach((d) => {
+          const el = document.createElement("div");
+          el.className = "cal-day-name";
+          el.textContent = d;
+          grid.appendChild(el);
+        });
+
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const offset = firstDay === 0 ? 6 : firstDay - 1;
+        const daysInMonth = new Date(
+          currentYear,
+          currentMonth + 1,
+          0,
+        ).getDate();
+
+        for (let i = 0; i < offset; i++) {
+          const el = document.createElement("div");
+          el.className = "cal-day empty";
+          grid.appendChild(el);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const ds = dateStr(currentYear, currentMonth, d);
+          const el = document.createElement("div");
+          el.className = "cal-day";
+          el.textContent = d;
+          if (ds === today) el.classList.add("today");
+          if (periodDates.has(ds)) el.classList.add("period");
+          else if (ovulation.has(ds)) el.classList.add("ovulation");
+          else if (fertile.has(ds)) el.classList.add("fertile");
+          else if (predicted.has(ds)) el.classList.add("predicted");
+          el.title = ds;
+          grid.appendChild(el);
+        }
+      }
+
+      // ============================================================
+      // KAYIT
+      // ============================================================
+      let selectedFlow = "";
+      let selectedMood = "";
+      let selectedSymptoms = [];
+
+      function selectFlow(el) {
+        document
+          .querySelectorAll(".flow-btn")
+          .forEach((b) => b.classList.remove("active"));
+        el.classList.add("active");
+        selectedFlow = el.dataset.flow;
+      }
+
+      function selectMood(el) {
+        document
+          .querySelectorAll(".mood-btn")
+          .forEach((b) => b.classList.remove("active"));
+        el.classList.add("active");
+        selectedMood = el.dataset.mood;
+      }
+
+      function toggleSymptom(el) {
+        el.classList.toggle("active");
+        selectedSymptoms = [...document.querySelectorAll(".tag.active")].map(
+          (t) => t.textContent.trim(),
+        );
+      }
+
+      function savePeriod() {
+        const start = document.getElementById("startDate").value;
+        const end = document.getElementById("endDate").value;
+        if (!start || !end) {
+          showToast("Lütfen başlangıç ve bitiş tarihi gir! 🌸");
+          return;
+        }
+        if (new Date(start) > new Date(end)) {
+          showToast("Başlangıç bitiş tarihinden önce olmalı");
+          return;
+        }
+
+        const data = loadData();
+        const entry = {
+          id: Date.now(),
+          start,
+          end,
+          flow: selectedFlow,
+          mood: selectedMood,
+          symptoms: selectedSymptoms,
+          notes: document.getElementById("notes").value,
+          duration:
+            Math.round((new Date(end) - new Date(start)) / 86400000) + 1,
+        };
+
+        data.periods.push(entry);
+        data.periods.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+        // Döngü uzunluğunu otomatik güncelle
+        if (data.periods.length >= 2) {
+          const sorted = [...data.periods].sort(
+            (a, b) => new Date(a.start) - new Date(b.start),
+          );
+          const lengths = [];
+          for (let i = 1; i < sorted.length; i++) {
+            lengths.push(
+              Math.round(
+                (new Date(sorted[i].start) - new Date(sorted[i - 1].start)) /
+                  86400000,
+              ),
+            );
+          }
+          data.settings.cycleLength = Math.round(
+            lengths.reduce((a, b) => a + b) / lengths.length,
+          );
+          data.settings.periodLength = Math.round(
+            data.periods.map((p) => p.duration).reduce((a, b) => a + b) /
+              data.periods.length,
+          );
+        }
+
+        saveData(data);
+        showToast("Kaydedildi! 💕");
+        resetForm();
+        renderAll();
+      }
+
+      function deletePeriod(id) {
+        if (!confirm("Bu kaydı silmek istiyor musun?")) return;
+        const data = loadData();
+        data.periods = data.periods.filter((p) => p.id !== id);
+        saveData(data);
+        renderAll();
+        showToast("Kayıt silindi");
+      }
+
+      function resetForm() {
+        document.getElementById("startDate").value = "";
+        document.getElementById("endDate").value = "";
+        document.getElementById("notes").value = "";
+        selectedFlow = "";
+        selectedMood = "";
+        selectedSymptoms = [];
+        document
+          .querySelectorAll(".flow-btn, .mood-btn, .tag")
+          .forEach((el) => el.classList.remove("active"));
+      }
+
+      // ============================================================
+      // İSTATİSTİKLER
+      // ============================================================
+      function renderStats() {
+        const data = loadData();
+        const el = document.getElementById("statsContent");
+        if (data.periods.length === 0) {
+          el.innerHTML =
+            '<div class="empty-state">Henüz kayıt yok. İlk regl tarihini ekle!</div>';
+          return;
+        }
+
+        const sorted = [...data.periods].sort(
+          (a, b) => new Date(a.start) - new Date(b.start),
+        );
+        const durations = sorted.map((p) => p.duration);
+        const avgDuration = (
+          durations.reduce((a, b) => a + b) / durations.length
+        ).toFixed(1);
+
+        let avgCycle = "-",
+          minCycle = "-",
+          maxCycle = "-";
+        if (sorted.length >= 2) {
+          const cycleLens = [];
+          for (let i = 1; i < sorted.length; i++) {
+            cycleLens.push(
+              Math.round(
+                (new Date(sorted[i].start) - new Date(sorted[i - 1].start)) /
+                  86400000,
+              ),
+            );
+          }
+          avgCycle =
+            (cycleLens.reduce((a, b) => a + b) / cycleLens.length).toFixed(0) +
+            " gün";
+          minCycle = Math.min(...cycleLens) + " gün";
+          maxCycle = Math.max(...cycleLens) + " gün";
+        }
+
+        const mostCommonFlow = mostCommon(
+          sorted.map((p) => p.flow).filter(Boolean),
+        );
+        const mostCommonMood = mostCommon(
+          sorted.map((p) => p.mood).filter(Boolean),
+        );
+
+        el.innerHTML = `
+    <div class="stat-row"><span class="stat-label">Toplam kayıt</span><span class="stat-value">${sorted.length}</span></div>
+    <div class="stat-row"><span class="stat-label">Ort. döngü uzunluğu</span><span class="stat-value">${avgCycle}</span></div>
+    <div class="stat-row"><span class="stat-label">Ort. regl süresi</span><span class="stat-value">${avgDuration} gün</span></div>
+    <div class="stat-row"><span class="stat-label">En kısa döngü</span><span class="stat-value">${minCycle}</span></div>
+    <div class="stat-row"><span class="stat-label">En uzun döngü</span><span class="stat-value">${maxCycle}</span></div>
+    ${mostCommonFlow ? `<div class="stat-row"><span class="stat-label">Sık akış tipi</span><span class="stat-value">${mostCommonFlow}</span></div>` : ""}
+    ${mostCommonMood ? `<div class="stat-row"><span class="stat-label">Sık ruh hali</span><span class="stat-value">${mostCommonMood}</span></div>` : ""}
+  `;
+      }
+
+      function mostCommon(arr) {
+        if (!arr.length) return null;
+        const freq = {};
+        arr.forEach((x) => (freq[x] = (freq[x] || 0) + 1));
+        return Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0];
+      }
+
+      // ============================================================
+      // SONRAKİ REGL & BUGÜNKÜ FAZ
+      // ============================================================
+      function renderNextPeriod() {
+        const data = loadData();
+        const el = document.getElementById("nextPeriodInfo");
+        if (data.periods.length === 0) {
+          el.innerHTML =
+            '<div class="empty-state">Tahmin için en az 1 kayıt gerekli</div>';
+          return;
+        }
+
+        const cl = data.settings.cycleLength || 28;
+        const sorted = [...data.periods].sort(
+          (a, b) => new Date(b.start) - new Date(a.start),
+        );
+        const lastStart = new Date(sorted[0].start);
+        const nextStart = new Date(lastStart);
+        nextStart.setDate(nextStart.getDate() + cl);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const diff = Math.round((nextStart - today) / 86400000);
+
+        if (diff < 0) {
+          // Override: try next cycle
+          const next2 = new Date(lastStart);
+          next2.setDate(next2.getDate() + cl * 2);
+          const diff2 = Math.round((next2 - today) / 86400000);
+          el.innerHTML = `<div class="next-info">
+      <div class="days-left">${diff2}</div>
+      <div class="days-label">gün kaldı</div>
+      <div class="next-date">Tahmini tarih: ${next2.toLocaleDateString("tr-TR", { day: "numeric", month: "long" })}</div>
+    </div>`;
+        } else {
+          el.innerHTML = `<div class="next-info">
+      <div class="days-left">${diff === 0 ? "🌸" : diff}</div>
+      <div class="days-label">${diff === 0 ? "Bugün başlıyor olabilir!" : "gün kaldı"}</div>
+      <div class="next-date">Tahmini tarih: ${nextStart.toLocaleDateString("tr-TR", { day: "numeric", month: "long" })}</div>
+    </div>`;
+        }
+      }
+
+      function renderPhase() {
+        const data = loadData();
+        const el = document.getElementById("phaseInfo");
+        if (data.periods.length === 0) {
+          el.innerHTML =
+            '<div class="empty-state">Döngü fazını görmek için kayıt ekle</div>';
+          return;
+        }
+
+        const cl = data.settings.cycleLength || 28;
+        const sorted = [...data.periods].sort(
+          (a, b) => new Date(b.start) - new Date(a.start),
+        );
+        const lastStart = new Date(sorted[0].start);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dayInCycle = Math.round((today - lastStart) / 86400000) % cl;
+
+        let phase, desc, emoji;
+        if (dayInCycle < (data.settings.periodLength || 5)) {
+          phase = "Menstrüasyon Fazı";
+          desc = "Vücudun dinlenmeye ihtiyacı var. Kendine nazik ol.";
+          emoji = "🌸";
+        } else if (dayInCycle < 13) {
+          phase = "Foliküler Faz";
+          desc = "Enerji artıyor! Yeni şeyler denemek için güzel bir dönem.";
+          emoji = "🌱";
+        } else if (dayInCycle < 16) {
+          phase = "Yumurtlama Dönemi";
+          desc = "En enerjik ve sosyal hissettiğin dönem. Verimlilik yüksek!";
+          emoji = "✨";
+        } else {
+          phase = "Lüteal Faz";
+          desc = "Döngünün bitimine yaklaşıyorsun. Kendinle nazik ol.";
+          emoji = "🍂";
+        }
+
+        el.innerHTML = `
+    <div class="cycle-phase-banner">
+      <strong>${emoji} ${phase}</strong>
+      ${desc}
+    </div>
+    <div class="stat-row"><span class="stat-label">Döngü günü</span><span class="stat-value">${dayInCycle + 1}. gün</span></div>
+    <div class="stat-row"><span class="stat-label">Döngü uzunluğu</span><span class="stat-value">${cl} gün</span></div>
+  `;
+      }
+
+      // ============================================================
+      // GEÇMİŞ
+      // ============================================================
+      function renderHistory() {
+        const data = loadData();
+        const el = document.getElementById("historyList");
+        if (data.periods.length === 0) {
+          el.innerHTML = '<div class="empty-state">Henüz kayıt yok 🌸</div>';
+          return;
+        }
+        const sorted = [...data.periods].sort(
+          (a, b) => new Date(b.start) - new Date(a.start),
+        );
+        el.innerHTML = sorted
+          .map(
+            (p) => `
+    <li class="history-item">
+      <div>
+        <span class="date-range">${new Date(p.start).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })} – ${new Date(p.end).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" })}</span><br>
+        <span class="duration">${p.duration} gün ${p.flow ? "· " + p.flow : ""} ${p.mood || ""} ${p.symptoms && p.symptoms.length ? "· " + p.symptoms.join(", ") : ""}</span>
+        ${p.notes ? `<br><span style="font-size:0.75rem;color:var(--text-soft);font-style:italic">${p.notes}</span>` : ""}
+      </div>
+      <button class="del-btn" onclick="deletePeriod(${p.id})" title="Sil">🗑</button>
+    </li>
+  `,
+          )
+          .join("");
+      }
+
+      // ============================================================
+      // TAB SWİTCHİNG
+      // ============================================================
+      let activeTab = "takvim";
+      const chartInstances = {};
+
+      function switchTab(name, btn) {
+        activeTab = name;
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        document.querySelectorAll(".tab-panel").forEach((p) => {
+          p.style.display = "none";
+          p.classList.remove("active");
+        });
+        const panel = document.getElementById("tab-" + name);
+        panel.style.display = "contents";
+        panel.classList.add("active");
+        if (name === "analiz") renderCharts();
+      }
+
+      // ============================================================
+      // GRAFİKLER
+      // ============================================================
+      const ROSE = "#e8637a",
+        ROSE_DEEP = "#c94060",
+        BLUSH = "rgba(232,99,122,0.15)";
+      const chartDefaults = {
+        font: { family: "DM Sans, sans-serif", size: 11 },
+        color: "#8a6070",
+      };
+
+      function destroyChart(id) {
+        if (chartInstances[id]) {
+          chartInstances[id].destroy();
+          delete chartInstances[id];
+        }
+      }
+
+      function noDataHtml() {
+        return `<div class="no-data-chart"><span>🌸</span>Grafik için en az 2 kayıt gerekli</div>`;
+      }
+
+      function renderCharts() {
+        const data = loadData();
+        Chart.defaults.font.family = "DM Sans, sans-serif";
+        Chart.defaults.color = "#8a6070";
+
+        renderCycleChart(data);
+        renderDurationChart(data);
+        renderSymptomChart(data);
+        renderFlowChart(data);
+        renderMoodChart(data);
+        renderStats(); // reuse stats panel in analiz tab
+      }
+
+      function renderCycleChart(data) {
+        destroyChart("cycleChart");
+        const sorted = [...data.periods].sort(
+          (a, b) => new Date(a.start) - new Date(b.start),
+        );
+        const insightsEl = document.getElementById("cycleInsights");
+
+        if (sorted.length < 2) {
+          document.querySelector("#cycleChart").parentElement.innerHTML =
+            noDataHtml();
+          insightsEl.innerHTML = "";
+          return;
+        }
+
+        const labels = [],
+          lengths = [];
+        for (let i = 1; i < sorted.length; i++) {
+          const days = Math.round(
+            (new Date(sorted[i].start) - new Date(sorted[i - 1].start)) /
+              86400000,
+          );
+          labels.push(
+            new Date(sorted[i].start).toLocaleDateString("tr-TR", {
+              month: "short",
+              year: "2-digit",
+            }),
+          );
+          lengths.push(days);
+        }
+
+        const avg = lengths.reduce((a, b) => a + b) / lengths.length;
+        const stdDev = Math.sqrt(
+          lengths.map((x) => (x - avg) ** 2).reduce((a, b) => a + b) /
+            lengths.length,
+        );
+
+        const ctx = document.getElementById("cycleChart").getContext("2d");
+        chartInstances["cycleChart"] = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Döngü uzunluğu (gün)",
+                data: lengths,
+                borderColor: ROSE,
+                backgroundColor: BLUSH,
+                pointBackgroundColor: ROSE_DEEP,
+                pointRadius: 5,
+                tension: 0.35,
+                fill: true,
+                borderWidth: 2.5,
+              },
+              {
+                label: "Ortalama",
+                data: Array(labels.length).fill(Math.round(avg)),
+                borderColor: "rgba(155,107,122,0.5)",
+                borderDash: [6, 4],
+                pointRadius: 0,
+                borderWidth: 1.5,
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: "bottom", labels: { boxWidth: 12 } },
+              tooltip: {
+                callbacks: { label: (ctx) => ` ${ctx.parsed.y} gün` },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                min: Math.max(14, Math.min(...lengths) - 3),
+                grid: { color: "rgba(232,99,122,0.08)" },
+                ticks: { callback: (v) => v + " gün" },
+              },
+              x: { grid: { display: false } },
+            },
+          },
+        });
+
+        // Insights
+        const chips = [];
+        chips.push(
+          `<span class="insight-chip">Ortalama: ${avg.toFixed(1)} gün</span>`,
+        );
+        chips.push(
+          `<span class="insight-chip orange">Sapma: ±${stdDev.toFixed(1)} gün</span>`,
+        );
+        if (stdDev < 3)
+          chips.push(`<span class="insight-chip green">✓ Düzenli döngü</span>`);
+        else if (stdDev < 6)
+          chips.push(
+            `<span class="insight-chip orange">⚡ Orta değişkenlik</span>`,
+          );
+        else
+          chips.push(
+            `<span class="insight-chip" style="background:rgba(220,50,50,0.1);color:#a02020;border-color:rgba(220,50,50,0.2)">⚠ Düzensiz döngü</span>`,
+          );
+        insightsEl.innerHTML = chips.join("");
+      }
+
+      function renderDurationChart(data) {
+        destroyChart("durationChart");
+        const sorted = [...data.periods].sort(
+          (a, b) => new Date(a.start) - new Date(b.start),
+        );
+        if (sorted.length < 1) {
+          document.querySelector("#durationChart").parentElement.innerHTML =
+            noDataHtml();
+          return;
+        }
+        const labels = sorted.map((p) =>
+          new Date(p.start).toLocaleDateString("tr-TR", {
+            month: "short",
+            year: "2-digit",
+          }),
+        );
+        const durations = sorted.map((p) => p.duration);
+        const ctx = document.getElementById("durationChart").getContext("2d");
+        chartInstances["durationChart"] = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Regl süresi (gün)",
+                data: durations,
+                backgroundColor: durations.map((d) =>
+                  d <= 3 ? "rgba(232,99,122,0.4)" : d <= 6 ? ROSE : ROSE_DEEP,
+                ),
+                borderRadius: 8,
+                borderSkipped: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: { label: (ctx) => ` ${ctx.parsed.y} gün` },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: "rgba(232,99,122,0.08)" },
+                ticks: { stepSize: 1 },
+              },
+              x: { grid: { display: false } },
+            },
+          },
+        });
+      }
+
+      function renderSymptomChart(data) {
+        destroyChart("symptomChart");
+        const allSymptoms = data.periods.flatMap((p) => p.symptoms || []);
+        if (allSymptoms.length === 0) {
+          document.querySelector("#symptomChart").parentElement.innerHTML =
+            noDataHtml();
+          return;
+        }
+        const freq = {};
+        allSymptoms.forEach((s) => {
+          const k = s.replace(/^[^\s]+\s/, "");
+          freq[k] = (freq[k] || 0) + 1;
+        });
+        const sorted = Object.entries(freq)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6);
+
+        const colors = [
+          "rgba(232,99,122,0.8)",
+          "rgba(201,64,96,0.8)",
+          "rgba(244,160,176,0.8)",
+          "rgba(155,107,122,0.7)",
+          "rgba(255,160,100,0.7)",
+          "rgba(100,180,140,0.7)",
+        ];
+        const ctx = document.getElementById("symptomChart").getContext("2d");
+        chartInstances["symptomChart"] = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: sorted.map(([k]) => k),
+            datasets: [
+              {
+                data: sorted.map(([, v]) => v),
+                backgroundColor: colors,
+                borderWidth: 0,
+                hoverOffset: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "right",
+                labels: { boxWidth: 12, padding: 10, font: { size: 11 } },
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => ` ${ctx.label}: ${ctx.parsed} kez`,
+                },
+              },
+            },
+            cutout: "58%",
+          },
+        });
+      }
+
+      function renderFlowChart(data) {
+        destroyChart("flowChart");
+        const flows = data.periods.map((p) => p.flow).filter(Boolean);
+        if (flows.length === 0) {
+          document.querySelector("#flowChart").parentElement.innerHTML =
+            noDataHtml();
+          return;
+        }
+        const order = ["hafif", "orta", "yoğun", "çok yoğun"];
+        const freq = {};
+        flows.forEach((f) => (freq[f] = (freq[f] || 0) + 1));
+        const labels = order.filter((k) => freq[k]);
+        const vals = labels.map((k) => freq[k]);
+        const ctx = document.getElementById("flowChart").getContext("2d");
+        chartInstances["flowChart"] = new Chart(ctx, {
+          type: "polarArea",
+          data: {
+            labels,
+            datasets: [
+              {
+                data: vals,
+                backgroundColor: [
+                  "rgba(244,160,176,0.7)",
+                  "rgba(232,99,122,0.7)",
+                  "rgba(201,64,96,0.8)",
+                  "rgba(140,30,60,0.8)",
+                ],
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: { boxWidth: 12, padding: 8, font: { size: 11 } },
+              },
+            },
+            scales: {
+              r: {
+                ticks: { display: false },
+                grid: { color: "rgba(232,99,122,0.1)" },
+              },
+            },
+          },
+        });
+      }
+
+      function renderMoodChart(data) {
+        destroyChart("moodChart");
+        const moods = data.periods.map((p) => p.mood).filter(Boolean);
+        if (moods.length === 0) {
+          document.querySelector("#moodChart").parentElement.innerHTML =
+            noDataHtml();
+          return;
+        }
+        const freq = {};
+        moods.forEach((m) => (freq[m] = (freq[m] || 0) + 1));
+        const labels = Object.keys(freq);
+        const vals = labels.map((k) => freq[k]);
+        const moodColors = {
+          "😊": "rgba(100,200,140,0.75)",
+          "😐": "rgba(180,180,180,0.7)",
+          "😢": "rgba(100,150,220,0.7)",
+          "😡": "rgba(220,80,80,0.75)",
+          "😴": "rgba(160,120,200,0.7)",
+        };
+        const ctx = document.getElementById("moodChart").getContext("2d");
+        chartInstances["moodChart"] = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                data: vals,
+                backgroundColor: labels.map((l) => moodColors[l] || ROSE),
+                borderRadius: 10,
+                borderSkipped: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: { label: (ctx) => ` ${ctx.parsed.y} kez` },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                grid: { color: "rgba(232,99,122,0.08)" },
+              },
+              x: { grid: { display: false }, ticks: { font: { size: 16 } } },
+            },
+          },
+        });
+      }
+
+      function resetAllData() {
+        if (
+          !confirm(
+            "Tüm regl kayıtların silinecek. Bu işlem geri alınamaz.\n\nEmin misin?",
+          )
+        )
+          return;
+        if (
+          !confirm(
+            "Son kez onaylıyor musun? Tüm veriler kalıcı olarak silinecek.",
+          )
+        )
+          return;
+        localStorage.removeItem(STORAGE_KEY);
+        Object.keys(chartInstances).forEach((k) => {
+          chartInstances[k].destroy();
+          delete chartInstances[k];
+        });
+        showToast("Tüm veriler silindi 🌸");
+        renderAll();
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 2800);
+      }
+
+      function renderAll() {
+        renderCalendar();
+        renderStats();
+        renderNextPeriod();
+        renderHistory();
+        renderPhase();
+      }
+
+      // Bugünün tarihini default olarak ayarla
+      const todayISO = new Date().toISOString().slice(0, 10);
+      document.getElementById("startDate").value = todayISO;
+      document.getElementById("endDate").value = todayISO;
+
+      // Init tab visibility
+      document.getElementById("tab-analiz").style.display = "none";
+      document.getElementById("tab-kayit").style.display = "none";
+
+      renderAll();
+    </script>
+  </body>
+</html>
